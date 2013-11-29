@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+    Autor: Mario Pérez Esteso <mario@geekytheory.com>
+    Web: geekytheory.com
+-->
+<html>
+<head>
+    <meta charset="utf-8" name="viewport" content="width=device-width" />
+	<title>
+		Raspberry Pi Status
+	</title>
+    <!-- Importo el módulo socket.io que tengo en el proyecto -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <!-- Importo el archivo Javascript de Highcharts directamente desde su servidor -->
+    <script src="http://code.highcharts.com/highcharts.js"></script> 
+</head>
+<body>
+    <!-- Creo el div donde tendré la gráfica. Le digo que ocupe todo el ancho
+         de la pantalla y 400px de alto -->
+    <div id="chart" style="width:100%; height:400px;"></div>
+    <!-- Comienza el Javascript -->
+    <script>
+    // Creo un WebSocket. ¡Poned la IP de vuestra Raspberry Pi! 
+    var socket = io.connect('http://192.168.1.9:8000');
+    // Creo un nuevo objeto 'Chart'
+    var chart;
+    chart = new Highcharts.Chart({
+        chart: {
+            renderTo: 'chart', 
+            defaultSeriesType: 'spline',
+            events: {
+                load: function() {
+                    // Cada vez que reciba un valor desde el socket, lo meto en la gráfica
+                    socket.on('temperatureUpdate', function (time, data) {
+                        var series = chart.series[0];
+                        series.addPoint([time, data]);
+                    });
+                }
+            }
+        },
+        rangeSelector : {
+            selected : 100
+        },
+        title: {
+            text: 'CPU Temperature Raspberry Pi'
+        },
+        xAxis: {
+            type: 'datetime',
+            tickPixelInterval: 150,
+            maxZoom: 20 * 1000
+        },
+        yAxis: {
+            minPadding: 0.2,
+            maxPadding: 0.2,
+            title: {
+                text: 'Temperature ºC',
+                margin: 80
+            }
+        },
+        series: [{
+            name: 'Temperature',
+            data: []
+        }]
+    });
+    </script>
+</body>
+</html>
