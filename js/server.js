@@ -28,6 +28,8 @@ function handler(req, res) {
 //Cuando abramos el navegador estableceremos una conexión con socket.io.
 //Cada 5 segundos mandaremos a la gráfica un nuevo valor. 
 io.sockets.on('connection', function(socket) {
+  var address = socket.handshake.address;
+    console.log("New connection from " + address.address + ":" + address.port);
   setInterval(function(){
     child = exec("cat /sys/class/thermal/thermal_zone0/temp", function (error, stdout, stderr) {
     if (error !== null) {
