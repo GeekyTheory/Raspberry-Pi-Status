@@ -1,30 +1,60 @@
-<!DOCTYPE html>
 <!--
     Autor: Mario Pérez Esteso <mario@geekytheory.com>
     Web: geekytheory.com
 -->
-<html>
+<html class="no-js" lang="en">
 <head>
-    <meta charset="utf-8" name="viewport" content="width=device-width" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>
 		Raspberry Pi Status
 	</title>
     <!-- Importo el módulo socket.io que tengo en el proyecto -->
     <script src="/socket.io/socket.io.js"></script>
-    <script src="http://code.jquery.com/jquery-1.7.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery.js"></script>
     <!-- Importo el archivo Javascript de Highcharts directamente desde su servidor -->
-    <script src="http://code.highcharts.com/highcharts.js"></script> 
+    <script src="http://code.highcharts.com/highcharts.js" type="application/javascript"></script>
+    <!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
+
+<!-- Optional theme -->
+<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap-theme.min.css">
+
+<!-- Latest compiled and minified JavaScript -->
+<script src="//netdna.bootstrapcdn.com/bootstrap/3.0.2/js/bootstrap.min.js"></script>
+<script src="http://code.highcharts.com/modules/exporting.js"></script>
+
 </head>
 <body>
+<!-- Main jumbotron for a primary marketing message or call to action -->
+    <div class="container">
+      <div class="page-header">
+        <h2>Monitoring panel</h2>
+        <p>You will be able to know the status of your Raspberry Pi with this Web app.</p>
+      </div>
+    
+  <div class="row marketing">
+      <div class="col-lg-4">
+        <div class="jumbotron">
+          <h5>General info</h5>
+          <p  id="p_hostname">Here you can see the general info of the Raspberry Pi</p>
+          <p  id="p_kernel">Here you can see the general info of the Raspberry Pi</p>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div id="chartMemory" style="min-width: 100; height:250px; margin: 0 auto"></div>
+    </div>
+  </div>
     <!-- Creo el div donde tendré la gráfica. Le digo que ocupe todo el ancho
          de la pantalla y 400px de alto -->
-    <div id="chart" style="width:100%; height:400px;"></div>
+    <div class="container" id="chart" style="width:75%; height:300px;"></div>
+
     <!-- Comienza el Javascript -->
     <script>
     // Creo un WebSocket. ¡Poned la IP de vuestra Raspberry Pi! 
-    var socket = io.connect('http://192.168.1.9:8000');
+    var socket = io.connect('http://84.127.3.134:8000');
     // Creo un nuevo objeto 'Chart'
-    var chart;
+    var chart, chartMem, memTotal;
     chart = new Highcharts.Chart({
         chart: {
             renderTo: 'chart', 
@@ -61,8 +91,72 @@
         series: [{
             name: 'Temperature',
             data: []
-        }]
+        }],
+        credits: {
+                enabled: false
+        }
     });
-    </script>
+
+    chartMem = new Highcharts.Chart({
+            chart: {
+                renderTo: 'chartMemory',
+                type: 'bar',
+                events: {
+                load: function() {
+                    // Cada vez que reciba un valor desde el socket, lo meto en la gráfica
+                    socket.on('memoryUpdate', function (free, used, buffered, cached) {
+                        chartMem.series[0].setData([{y: used, color: 'red'}, {y: free, color: 'green'}, {y: buffered, color: 'blue'}, {y: cached, color: 'orange'}]);
+                      });
+                    }
+                  }
+            },
+            title: {
+                text: 'Memory'
+            },
+            xAxis: {
+                categories: ['Used', 'Free', 'Buffered', 'Cached'],
+                title: {
+                    text: null
+                }
+            },
+            yAxis: {
+                min: 0,
+                title: {
+                    text: "Percentage",
+                    align: 'high'
+                },
+                labels: {
+                    overflow: 'justify'
+                }
+            },
+            tooltip: {
+                valueSuffix: ' %'
+            },
+            plotOptions: {
+                bar: {
+                    dataLabels: {
+                        enabled: true
+                    }
+                }
+            },            
+            credits: {
+                enabled: false
+            },
+            series: [{
+                name: "Memory",
+                data: [{y: 0, color: 'red'}, {y: 0, color: 'green'}, {y: 0, color: 'blue'}, {y: 0, color: 'orange'}]
+            }]
+        });
+        socket.on('hostname', function (hname) {
+          document.getElementById("p_hostname").innerHTML="Hostname: "+hname;
+        });
+        socket.on('kernel', function (ker) {
+          document.getElementById("p_kernel").innerHTML="Kernel: "+ker;
+        }); 
+        socket.on('memoryUpdate', function (mem) {
+          chartMem.setTitle({text:"Memory: "+mem+" KB"});
+          memTotal = mem;
+        });
+    </script>   
 </body>
 </html>
