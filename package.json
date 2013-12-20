@@ -1,5 +1,5 @@
 {
-  "name": "Raspberry Pi Status",
+  "name": "Raspberry-Pi-Status",
   "version": "0.1.0",
   "description": "Raspberry Pi monitoring panel",
   "main": "server.js",
