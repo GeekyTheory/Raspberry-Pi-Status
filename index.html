@@ -13,7 +13,8 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="https://code.jquery.com/jquery.js"></script>
     <!-- Importo el archivo Javascript de Highcharts directamente desde su servidor -->
-    <script src="http://code.highcharts.com/highcharts.js" type="application/javascript"></script>
+    <!--<script src="http://code.highcharts.com/highcharts.js" type="application/javascript"></script>-->
+    <script src="http://code.highcharts.com/stock/highstock.js"></script>
     <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css">
 
@@ -45,9 +46,18 @@
         <div id="chartMemory" style="min-width: 100; height:250px; margin: 0 auto"></div>
       </div>
   </div>
+
+  <div class="row marketing">
+      <div class="col-lg-6">
+        <div class="container" id="chart" style="width:100%; height:300px;"></div>
+      </div>
+      <div class="col-lg-6">
+        <div class="container" id="cpu_usage" style="width:100%; height:300px;"></div>
+      </div>
+  </div>
     <!-- Creo el div donde tendré la gráfica. Le digo que ocupe todo el ancho
          de la pantalla y 400px de alto -->
-    <div class="container" id="chart" style="width:75%; height:300px;"></div>
+    
 
     <!-- Comienza el Javascript -->
     <script>
@@ -55,8 +65,8 @@
     var socket = io.connect('http://'+location.host);
     console.log(location.host)
     // Creo un nuevo objeto 'Chart'
-    var chart, chartMem, memTotal;
-    chart = new Highcharts.Chart({
+    var chart, chartCPU, chartMem, memTotal;
+    chart = new Highcharts.StockChart({
         chart: {
             renderTo: 'chart', 
             defaultSeriesType: 'spline',
@@ -86,11 +96,53 @@
             maxPadding: 0.2,
             title: {
                 text: 'Temperature ºC',
-                margin: 80
+                margin: 10
             }
         },
         series: [{
             name: 'Temperature',
+            data: []
+        }],
+        credits: {
+                enabled: false
+        }
+    });
+
+      chartCPU = new Highcharts.StockChart({
+        chart: {
+            renderTo: 'cpu_usage', 
+            defaultSeriesType: 'spline',
+            events: {
+                load: function() {
+                    // Cada vez que reciba un valor desde el socket, lo meto en la gráfica
+                    socket.on('cpuUsageUpdate', function (time, data) {
+                        var series = chartCPU.series[0];
+                        series.addPoint([time, data]);
+                    });
+                }
+            }
+        },
+        rangeSelector : {
+            selected : 100
+        },
+        title: {
+            text: 'CPU Load Raspberry Pi'
+        },
+        xAxis: {
+            type: 'datetime',
+            tickPixelInterval: 150,
+            maxZoom: 20 * 1000
+        },
+        yAxis: {
+            minPadding: 0.2,
+            maxPadding: 0.2,
+            title: {
+                text: 'CPU Load (%)',
+                margin: 10
+            }
+        },
+        series: [{
+            name: 'CPU Load',
             data: []
         }],
         credits: {

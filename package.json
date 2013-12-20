@@ -1,0 +1,11 @@
+{
+  "name": "Raspberry Pi Status",
+  "version": "0.1.0",
+  "description": "Raspberry Pi monitoring panel",
+  "main": "server.js",
+  "repository": "https://github.com/GeekyTheory/Raspberry-Pi-Status",
+  "author": "Mario Pérez Esteso <mario@geekytheory.com>",
+  "dependencies": {
+   "socket.io": "~0.9.14"
+  }
+}
