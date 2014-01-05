@@ -2,16 +2,16 @@
  * Autor: Mario Pérez Esteso <mario@geekytheory.com>
  * Web: geekytheory.com
  */
-
-var app = require('http').createServer(handler).listen(8000, "0.0.0.0"),
+var port = 8000;
+var app = require('http').createServer(handler).listen(port, "0.0.0.0"),
   io = require('socket.io').listen(app),
-	fs = require('fs'),
+  fs = require('fs'),
   sys = require('util'),
   exec = require('child_process').exec,
   child, child1;
   var connectCounter = 0;
-//Escuchamos en el puerto 8000
-app.listen(8000);
+//Escuchamos en el puerto $port
+app.listen(port);
 //Si todo va bien al abrir el navegador, cargaremos el archivo index.html
 function handler(req, res) {
 	fs.readFile(__dirname+'/index.html', function(err, data) {
@@ -36,7 +36,7 @@ io.sockets.on('connection', function(socket) {
   connectCounter++; 
   console.log("NUMBER OF CONNECTIONS++: "+connectCounter);
   socket.on('disconnect', function() { connectCounter--;  console.log("NUMBER OF CONNECTIONS--: "+connectCounter);});
-  
+
   // Function for checking memory
     child = exec("egrep --color 'MemTotal' /proc/meminfo | egrep '[0-9.]{4,}' -o", function (error, stdout, stderr) {
     if (error !== null) {
@@ -55,6 +55,14 @@ io.sockets.on('connection', function(socket) {
     }
   });
 
+    child = exec("uptime | tail -n 1 | awk '{print $1}'", function (error, stdout, stderr) {
+    if (error !== null) {
+      console.log('exec error: ' + error);
+    } else {
+      socket.emit('uptime', stdout); 
+    }
+  });
+
     child = exec("uname -r", function (error, stdout, stderr) {
     if (error !== null) {
       console.log('exec error: ' + error);
@@ -62,6 +70,14 @@ io.sockets.on('connection', function(socket) {
       socket.emit('kernel', stdout); 
     }
   });
+
+    child = exec("top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'", function (error, stdout, stderr) {
+	    if (error !== null) {
+	      console.log('exec error: ' + error);
+	    } else {
+	      socket.emit('toplist', stdout); 
+	    }
+	  });
     
 
   setInterval(function(){
@@ -131,4 +147,23 @@ io.sockets.on('connection', function(socket) {
     }
   });}, 5000);
 
+	// Uptime
+  setInterval(function(){
+    child = exec("uptime | tail -n 1 | awk '{print $1}'", function (error, stdout, stderr) {
+	    if (error !== null) {
+	      console.log('exec error: ' + error);
+	    } else {
+	      socket.emit('uptime', stdout); 
+	    }
+	  });}, 5000);
+
+// TOP list
+  setInterval(function(){
+    child = exec("top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'", function (error, stdout, stderr) {
+	    if (error !== null) {
+	      console.log('exec error: ' + error);
+	    } else {
+	      socket.emit('toplist', stdout); 
+	    }
+	  });}, 5000);
 });
