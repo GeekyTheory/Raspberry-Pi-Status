@@ -29,17 +29,20 @@
 <body>
 <!-- Main jumbotron for a primary marketing message or call to action -->
     <div class="container">
-      <div class="page-header">
-        <h2>Monitoring panel</h2>
-        <p>You will be able to know the status of your Raspberry Pi with this Web app.</p>
-      </div>
-    
+          
   <div class="row marketing">
       <div class="col-lg-4">
         <div class="panel panel-primary">
           <div class="panel-heading">General info</div>
           <div class="panel-body"><p  id="p_hostname">Here you can see the general info of the Raspberry Pi</p>
-            <p  id="p_kernel"></p></div>
+            <p  id="p_kernel"></p>
+            <p  id="p_uptime"></p>
+            <div>
+                <b>Top list:</b>
+                <ol id="toplist">
+                </ol>
+            </div>
+          </div>
         </div>
       </div>
       <div class="col-lg-8">
@@ -57,13 +60,12 @@
   </div>
     <!-- Creo el div donde tendré la gráfica. Le digo que ocupe todo el ancho
          de la pantalla y 400px de alto -->
-    
 
     <!-- Comienza el Javascript -->
     <script>
     // Creo un WebSocket. ¡Poned la IP de vuestra Raspberry Pi! 
-    var socket = io.connect('http://'+location.host);
-    console.log(location.host)
+    var socket = io.connect('http://'+ location.host);
+    // console.log(location.host)
     // Creo un nuevo objeto 'Chart'
     var chart, chartCPU, chartMem, memTotal;
     chart = new Highcharts.StockChart({
@@ -201,11 +203,22 @@
             }]
         });
         socket.on('hostname', function (hname) {
-          document.getElementById("p_hostname").innerHTML="Hostname: "+hname;
+          document.getElementById("p_hostname").innerHTML="<b>Hostname:</b> "+hname;
         });
         socket.on('kernel', function (ker) {
-          document.getElementById("p_kernel").innerHTML="Kernel: "+ker;
+          document.getElementById("p_kernel").innerHTML="<b>Kernel:</b> "+ker;
         }); 
+        socket.on('uptime', function (uptime) {
+          document.getElementById("p_uptime").innerHTML="<b>Up time:</b> "+ uptime;
+        }); 
+        socket.on('toplist', function (toplist) {
+            var res = toplist.split("\n");
+            var result = "";
+            for (r in res) {
+                result = result + "<li>" + res[r] + "</li>"
+            }
+            document.getElementById("toplist").innerHTML=result;
+        });
         socket.on('memoryTotal', function (mem) {
           chartMem.setTitle({text:"Memory: "+mem+" KB"});
           memTotal = mem;
