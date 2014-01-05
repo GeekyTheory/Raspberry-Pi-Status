@@ -215,7 +215,9 @@
             var res = toplist.split("\n");
             var result = "";
             for (r in res) {
-                result = result + "<li>" + res[r] + "</li>"
+            	if (res[r] != "") {
+                	result = result + "<li>" + res[r] + "</li>"
+        		}
             }
             document.getElementById("toplist").innerHTML=result;
         });
