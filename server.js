@@ -124,20 +124,23 @@ io.sockets.on('connection', function(socket) {
   }, 5000);
 
   // Function for measuring temperature
+
   setInterval(function(){
-    child = exec("cat /sys/class/thermal/thermal_zone0/temp", function (error, stdout, stderr) {
+    //child = exec("cat /sys/class/thermal/thermal_zone0/temp", function (error, stdout, stderr) {
+      child = exec("/opt/vc/bin/vcgencmd measure_temp | cut -c 6-9", function (error, stdout, stderr) {
     if (error !== null) {
       console.log('exec error: ' + error);
     } else {
       //Es necesario mandar el tiempo (eje X) y un valor de temperatura (eje Y).
       var date = new Date().getTime();
-      var temp = parseFloat(stdout)/1000;
+      var temp = parseFloat(stdout);
       socket.emit('temperatureUpdate', date, temp); 
     }
   });}, 5000);
+  
 
   setInterval(function(){
-    child = exec("top -d 0.5 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'", function (error, stdout, stderr) {
+    child = exec("top -d 1 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'", function (error, stdout, stderr) {
     if (error !== null) {
       console.log('exec error: ' + error);
     } else {
@@ -149,7 +152,7 @@ io.sockets.on('connection', function(socket) {
 
 	// Uptime
   setInterval(function(){
-    child = exec("uptime | tail -n 1 | awk '{print $1}'", function (error, stdout, stderr) {
+    child = exec("uptime | tail -n 1 | awk '{print $3 $4}' | cut -d \",\" -f1 ", function (error, stdout, stderr) {
 	    if (error !== null) {
 	      console.log('exec error: ' + error);
 	    } else {
