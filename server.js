@@ -149,7 +149,7 @@ io.sockets.on('connection', function(socket) {
 
 	// Uptime
   setInterval(function(){
-    child = exec("uptime | tail -n 1 | awk '{print $1}'", function (error, stdout, stderr) {
+    child = exec("uptime | tail -n 1 | awk '{print $3 $4 $5}'", function (error, stdout, stderr) {
 	    if (error !== null) {
 	      console.log('exec error: ' + error);
 	    } else {
