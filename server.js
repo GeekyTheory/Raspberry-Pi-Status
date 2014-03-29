@@ -145,7 +145,7 @@ io.sockets.on('connection', function(socket) {
       var date = new Date().getTime();
       socket.emit('cpuUsageUpdate', date, parseFloat(stdout)); 
     }
-  });}, 5000);
+  });}, 10000);
 
 	// Uptime
   setInterval(function(){
@@ -155,15 +155,15 @@ io.sockets.on('connection', function(socket) {
 	    } else {
 	      socket.emit('uptime', stdout); 
 	    }
-	  });}, 5000);
+	  });}, 60000);
 
 // TOP list
   setInterval(function(){
-    child = exec("top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'", function (error, stdout, stderr) {
+    child = exec("ps aux --width 30 --sort -rss --no-headers | head  | awk '{print $11}'", function (error, stdout, stderr) {
 	    if (error !== null) {
 	      console.log('exec error: ' + error);
 	    } else {
 	      socket.emit('toplist', stdout); 
 	    }
-	  });}, 5000);
+	  });}, 10000);
 });
