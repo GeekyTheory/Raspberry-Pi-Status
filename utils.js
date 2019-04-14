@@ -1,6 +1,19 @@
 const fs = require('fs'),
     exec = require('child_process').exec;
 
+
+let connectCounter = 0;
+
+function counterAdd () {
+    return ++connectCounter;
+}
+
+function counterLess () {
+    return --connectCounter;
+}
+
+
+
 //Si todo va bien al abrir el navegador, cargaremos el archivo index.html
 function serverHandler(req, res) {
     fs.readFile(__dirname + '/index.html', function(err, data) {
@@ -35,4 +48,4 @@ function execHandler (cmd) {
     })
 }
 
-module.exports = {serverHandler, execHandler, errorHandler}
+module.exports = {serverHandler, execHandler, errorHandler, counterAdd, counterLess}

@@ -4,25 +4,22 @@
  */
  
 const {port, ip, intervals} = require('./config'),
-  {serverHandler, execHandler, errorHandler} = require('./utils'),
+  {serverHandler, execHandler, errorHandler, counterAdd, counterLess} = require('./utils'),
   server = require('http').createServer(serverHandler).listen(port, ip),
   io = require('socket.io').listen(server);
 
     
-var connectCounter = 0;
+
 
 
 //Cuando abramos el navegador estableceremos una conexión con socket.io.
 //Cada X segundos mandaremos a la gráfica un nuevo valor. 
 io.sockets.on('connection', function(socket) {
-    var address = socket.handshake.address;
-
+    const address = socket.handshake.address;
     console.log("New connection from " + address.address + ":" + address.port);
-    connectCounter++;
-    console.log("NUMBER OF CONNECTIONS++: " + connectCounter);
+    console.log("NUMBER OF CONNECTIONS++: " + counterAdd());
     socket.on('disconnect', function() {
-        connectCounter--;
-        console.log("NUMBER OF CONNECTIONS--: " + connectCounter);
+        console.log("NUMBER OF CONNECTIONS--: " + counterLess());
     });
 
     // Function for checking memory
