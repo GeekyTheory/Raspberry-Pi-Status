@@ -207,13 +207,8 @@
                document.getElementById("p_uptime").innerHTML="<b>Up time:</b> "+ uptime;
              }); 
              socket.on('toplist', function (toplist) {
-                 var res = toplist.split("\n");
-                 var result = "";
-                 for (r in res) {
-                 	if (res[r] != "") {
-                     	result = result + "<li>" + res[r] + "</li>"
-             		}
-                 }
+                 const res = toplist.split("\n");
+                 const result = res.filter(item => item).map(item => `<li>${item}</li>`).join("");
                  document.getElementById("toplist").innerHTML=result;
              });
              socket.on('memoryTotal', function (mem) {
