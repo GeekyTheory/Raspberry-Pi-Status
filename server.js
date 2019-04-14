@@ -8,9 +8,6 @@ const {port, ip, intervals} = require('./config'),
   server = require('http').createServer(serverHandler).listen(port, ip),
   io = require('socket.io').listen(server);
 
-    
-
-
 
 //Cuando abramos el navegador estableceremos una conexión con socket.io.
 //Cada X segundos mandaremos a la gráfica un nuevo valor. 
