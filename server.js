@@ -3,29 +3,26 @@
  * Web: geekytheory.com
  */
  
-const {port, ip} = require('./config');
- 
-var app = require('http').createServer(handler).listen(port, ip),
-    io = require('socket.io').listen(app),
-    fs = require('fs'),
-    //sys = require('util'),
-    exec = require('child_process').exec;
-    //child, child1;
+const {port, ip, intervals} = require('./config'),
+  server = require('http').createServer(handler).listen(port, ip),
+  io = require('socket.io').listen(server),
+  fs = require('fs'),
+  exec = require('child_process').exec;
+
     
 var connectCounter = 0;
-//Escuchamos en el puerto $port
-app.listen(port);
 //Si todo va bien al abrir el navegador, cargaremos el archivo index.html
 function handler(req, res) {
     fs.readFile(__dirname + '/index.html', function(err, data) {
         if (err) {
-            //Si hay error, mandaremos un mensaje de error 500
-            console.log(err);
-            res.writeHead(500);
-            return res.end('Error loading index.html');
+          //Si hay error, mandaremos un mensaje de error 500
+          console.log(err);
+          res.writeHead(500);
+          res.end('Error loading index.html');
+        } else {
+          res.writeHead(200);
+          res.end(data); 
         }
-        res.writeHead(200);
-        res.end(data);
     });
 }
 
@@ -49,7 +46,7 @@ io.sockets.on('connection', function(socket) {
     });
 
     // Function for checking memory
-    child = exec("egrep --color 'MemTotal' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
+    exec("egrep --color 'MemTotal' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
         if (error !== null) {
             console.log('exec error: ' + error);
         } else {
@@ -58,7 +55,7 @@ io.sockets.on('connection', function(socket) {
         }
     });
 
-    child = exec("hostname", function(error, stdout, stderr) {
+    exec("hostname", function(error, stdout, stderr) {
         if (error !== null) {
             console.log('exec error: ' + error);
         } else {
@@ -66,7 +63,7 @@ io.sockets.on('connection', function(socket) {
         }
     });
 
-    child = exec("uptime | tail -n 1 | awk '{print $1}'", function(error, stdout, stderr) {
+    exec("uptime | tail -n 1 | awk '{print $1}'", function(error, stdout, stderr) {
         if (error !== null) {
             console.log('exec error: ' + error);
         } else {
@@ -74,7 +71,7 @@ io.sockets.on('connection', function(socket) {
         }
     });
 
-    child = exec("uname -r", function(error, stdout, stderr) {
+    exec("uname -r", function(error, stdout, stderr) {
         if (error !== null) {
             console.log('exec error: ' + error);
         } else {
@@ -82,7 +79,7 @@ io.sockets.on('connection', function(socket) {
         }
     });
 
-    child = exec("top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'", function(error, stdout, stderr) {
+    exec("top -d 0.5 -b -n2 | tail -n 10 | awk '{print $12}'", function(error, stdout, stderr) {
         if (error !== null) {
             console.log('exec error: ' + error);
         } else {
@@ -93,7 +90,7 @@ io.sockets.on('connection', function(socket) {
 
     setInterval(function() {
         // Function for checking memory free and used
-        child1 = exec("egrep --color 'MemFree' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
+        exec("egrep --color 'MemFree' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
             if (error == null) {
                 memFree = stdout;
                 memUsed = parseInt(memTotal) - parseInt(memFree);
@@ -106,7 +103,7 @@ io.sockets.on('connection', function(socket) {
         });
 
         // Function for checking memory buffered
-        child1 = exec("egrep --color 'Buffers' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
+        exec("egrep --color 'Buffers' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
             if (error == null) {
                 memBuffered = stdout;
                 percentBuffered = Math.round(parseInt(memBuffered) * 100 / parseInt(memTotal));
@@ -117,7 +114,7 @@ io.sockets.on('connection', function(socket) {
         });
 
         // Function for checking memory buffered
-        child1 = exec("egrep --color 'Cached' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
+        exec("egrep --color 'Cached' /proc/meminfo | egrep '[0-9.]{4,}' -o", function(error, stdout, stderr) {
             if (error == null) {
                 memCached = stdout;
                 percentCached = Math.round(parseInt(memCached) * 100 / parseInt(memTotal));
@@ -132,11 +129,11 @@ io.sockets.on('connection', function(socket) {
         } else {
             sendData = 1;
         }
-    }, 5000);
-
-    // Function for measuring temperature
-    setInterval(function() {
-        child = exec("cat /sys/class/thermal/thermal_zone0/temp", function(error, stdout, stderr) {
+        
+        
+        
+              // Function for measuring temperature
+        exec("cat /sys/class/thermal/thermal_zone0/temp", function(error, stdout, stderr) {
             if (error !== null) {
                 console.log('exec error: ' + error);
             } else {
@@ -146,10 +143,30 @@ io.sockets.on('connection', function(socket) {
                 socket.emit('temperatureUpdate', date, temp);
             }
         });
-    }, 5000);
+    }, intervals.short);
 
+    // Uptime
     setInterval(function() {
-        child = exec("top -d 0.5 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'", function(error, stdout, stderr) {
+        exec("uptime | tail -n 1 | awk '{print $3 $4 $5}'", function(error, stdout, stderr) {
+            if (error !== null) {
+                console.log('exec error: ' + error);
+            } else {
+                socket.emit('uptime', stdout);
+            }
+        });
+    }, intervals.medium);
+
+    // TOP list
+    setInterval(function() {
+        exec("ps aux --width 30 --sort -rss --no-headers | head  | awk '{print $11}'", function(error, stdout, stderr) {
+            if (error !== null) {
+                console.log('exec error: ' + error);
+            } else {
+                socket.emit('toplist', stdout);
+            }
+        });
+        
+        exec("top -d 0.5 -b -n2 | grep 'Cpu(s)'|tail -n 1 | awk '{print $2 + $4}'", function(error, stdout, stderr) {
             if (error !== null) {
                 console.log('exec error: ' + error);
             } else {
@@ -158,27 +175,9 @@ io.sockets.on('connection', function(socket) {
                 socket.emit('cpuUsageUpdate', date, parseFloat(stdout));
             }
         });
-    }, 10000);
-
-    // Uptime
-    setInterval(function() {
-        child = exec("uptime | tail -n 1 | awk '{print $3 $4 $5}'", function(error, stdout, stderr) {
-            if (error !== null) {
-                console.log('exec error: ' + error);
-            } else {
-                socket.emit('uptime', stdout);
-            }
-        });
-    }, 60000);
-
-    // TOP list
-    setInterval(function() {
-        child = exec("ps aux --width 30 --sort -rss --no-headers | head  | awk '{print $11}'", function(error, stdout, stderr) {
-            if (error !== null) {
-                console.log('exec error: ' + error);
-            } else {
-                socket.emit('toplist', stdout);
-            }
-        });
-    }, 10000);
+    }, intervals.long);
 });
+
+
+//Escuchamos en el puerto $port
+server.listen(port);
