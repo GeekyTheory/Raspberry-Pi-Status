@@ -6,6 +6,6 @@
   "repository": "https://github.com/GeekyTheory/Raspberry-Pi-Status",
   "author": "Mario Pérez Esteso <mario@geekytheory.com>",
   "dependencies": {
-   "socket.io": "~0.9.14"
+    "socket.io": "~0.9.14"
   }
 }
